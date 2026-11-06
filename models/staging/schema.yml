@@ -1,0 +1,180 @@
+version: 2
+
+models:
+  - name: stg_swaps
+    description: "One row per Swap in the pool."
+    columns:
+      - name: tx_hash
+        description: "Transaction hash."
+        data_tests: [not_null]
+      - name: log_index
+        description: "Position of the log inside the block."
+        data_tests: [not_null]
+      - name: block_number
+        description: "Block the event was included in."
+        data_tests: [not_null]
+      - name: block_timestamp
+        description: "Block time in UTC."
+        data_tests: [not_null]
+      - name: sender_address
+        description: "Address that called swap (usually a router)."
+        data_tests: [not_null]
+      - name: recipient_address
+        description: "Address that received the output tokens."
+        data_tests: [not_null]
+      - name: amount0_raw
+        description: "Change in pool WETH balance, in wei. Positive means WETH went into the pool."
+        data_tests: [not_null]
+      - name: amount1_raw
+        description: "Change in pool USDC balance, in USDC base units (6 decimals)."
+        data_tests: [not_null]
+      - name: sqrt_price_x96
+        description: "Pool price after the swap as sqrt(token1/token0) times 2^96."
+        data_tests: [not_null]
+      - name: pool_liquidity
+        description: "Active in-range liquidity after the swap."
+        data_tests: [not_null]
+      - name: tick
+        description: "Current pool tick after the swap."
+        data_tests: [not_null]
+  - name: stg_pool_mints
+    description: "One row per Mint in the pool: liquidity added to a tick range."
+    columns:
+      - name: tx_hash
+        description: "Transaction hash."
+        data_tests: [not_null]
+      - name: log_index
+        description: "Position of the log inside the block."
+        data_tests: [not_null]
+      - name: block_number
+        description: "Block the event was included in."
+        data_tests: [not_null]
+      - name: block_timestamp
+        description: "Block time in UTC."
+        data_tests: [not_null]
+      - name: sender_address
+        description: "Contract that called mint. The position manager for NFT positions."
+        data_tests: [not_null]
+      - name: owner_address
+        description: "Owner of the pool-level position. The position manager for NFT positions."
+        data_tests: [not_null]
+      - name: tick_lower
+        description: "Lower tick of the range."
+        data_tests: [not_null]
+      - name: tick_upper
+        description: "Upper tick of the range."
+        data_tests: [not_null]
+      - name: liquidity
+        description: "Liquidity units added."
+        data_tests: [not_null]
+      - name: amount0_raw
+        description: "WETH deposited, in wei."
+        data_tests: [not_null]
+      - name: amount1_raw
+        description: "USDC deposited, in base units."
+        data_tests: [not_null]
+  - name: stg_position_increases
+    description: "One row per IncreaseLiquidity on the position manager, limited to transactions that touched the pool."
+    columns:
+      - name: tx_hash
+        description: "Transaction hash."
+        data_tests: [not_null]
+      - name: log_index
+        description: "Position of the log inside the block."
+        data_tests: [not_null]
+      - name: block_number
+        description: "Block the event was included in."
+        data_tests: [not_null]
+      - name: block_timestamp
+        description: "Block time in UTC."
+        data_tests: [not_null]
+      - name: position_id
+        description: "NFT token id of the position."
+        data_tests: [not_null]
+      - name: liquidity
+        description: "Liquidity units added."
+        data_tests: [not_null]
+      - name: amount0_raw
+        description: "WETH deposited, in wei."
+        data_tests: [not_null]
+      - name: amount1_raw
+        description: "USDC deposited, in base units."
+        data_tests: [not_null]
+  - name: stg_position_decreases
+    description: "One row per DecreaseLiquidity on the position manager, limited to transactions that touched the pool."
+    columns:
+      - name: tx_hash
+        description: "Transaction hash."
+        data_tests: [not_null]
+      - name: log_index
+        description: "Position of the log inside the block."
+        data_tests: [not_null]
+      - name: block_number
+        description: "Block the event was included in."
+        data_tests: [not_null]
+      - name: block_timestamp
+        description: "Block time in UTC."
+        data_tests: [not_null]
+      - name: position_id
+        description: "NFT token id of the position."
+        data_tests: [not_null]
+      - name: liquidity
+        description: "Liquidity units removed."
+        data_tests: [not_null]
+      - name: amount0_raw
+        description: "WETH released to the position as owed tokens, in wei."
+        data_tests: [not_null]
+      - name: amount1_raw
+        description: "USDC released to the position as owed tokens, in base units."
+        data_tests: [not_null]
+  - name: stg_position_collects
+    description: "One row per Collect on the position manager: tokens actually paid out, principal plus fees."
+    columns:
+      - name: tx_hash
+        description: "Transaction hash."
+        data_tests: [not_null]
+      - name: log_index
+        description: "Position of the log inside the block."
+        data_tests: [not_null]
+      - name: block_number
+        description: "Block the event was included in."
+        data_tests: [not_null]
+      - name: block_timestamp
+        description: "Block time in UTC."
+        data_tests: [not_null]
+      - name: position_id
+        description: "NFT token id of the position."
+        data_tests: [not_null]
+      - name: recipient_address
+        description: "Address that received the tokens."
+        data_tests: [not_null]
+      - name: amount0_raw
+        description: "WETH paid out, in wei."
+        data_tests: [not_null]
+      - name: amount1_raw
+        description: "USDC paid out, in base units."
+        data_tests: [not_null]
+  - name: stg_position_transfers
+    description: "One row per position NFT Transfer. A transfer from the zero address is the NFT being minted."
+    columns:
+      - name: tx_hash
+        description: "Transaction hash."
+        data_tests: [not_null]
+      - name: log_index
+        description: "Position of the log inside the block."
+        data_tests: [not_null]
+      - name: block_number
+        description: "Block the event was included in."
+        data_tests: [not_null]
+      - name: block_timestamp
+        description: "Block time in UTC."
+        data_tests: [not_null]
+      - name: position_id
+        description: "NFT token id of the position."
+        data_tests: [not_null]
+      - name: from_address
+        description: "Previous owner. The zero address on mint."
+        data_tests: [not_null]
+      - name: to_address
+        description: "New owner."
+        data_tests: [not_null]

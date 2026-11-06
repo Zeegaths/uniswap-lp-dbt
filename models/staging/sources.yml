@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: base_uniswap
+    description: "Raw decoded events from the Uniswap V3 WETH/USDC 0.05% pool on Base and the NFT position manager, loaded by extract/extract.py."
+    schema: raw
+    tables:
+      - name: uniswap_events
+        description: "One row per decoded on-chain log. Event arguments are stored as JSON strings so large integers keep full precision."
+        columns:
+          - name: chain_id
+            description: "EVM chain id. Always 8453 (Base)."
+            data_tests: [not_null]
+          - name: contract_address
+            description: "Lowercase address of the contract that emitted the log (pool or position manager)."
+            data_tests: [not_null]
+          - name: event_name
+            description: "Decoded event name (Swap, Mint, Burn, Collect, IncreaseLiquidity, DecreaseLiquidity, Transfer)."
+            data_tests: [not_null]
+          - name: block_number
+            description: "Block the log was included in."
+            data_tests: [not_null]
+          - name: block_timestamp
+            description: "Block time in UTC."
+            data_tests: [not_null]
+          - name: tx_hash
+            description: "Transaction hash."
+            data_tests: [not_null]
+          - name: log_index
+            description: "Position of the log inside the block. With tx_hash, the primary key."
+            data_tests: [not_null]
+          - name: args
+            description: "Decoded event arguments as JSON. Integers are strings, addresses lowercase."
+            data_tests: [not_null]

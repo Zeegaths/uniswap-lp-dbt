@@ -1,0 +1,89 @@
+version: 2
+
+models:
+  - name: fct_lp_positions
+    description: >
+      Grain: one row per Uniswap V3 NFT liquidity position opened in the WETH/USDC 0.05% pool on Base during the extracted block range. Read by dashboards and analysis.
+    columns:
+      - name: position_id
+        description: "NFT token id of the position."
+        data_tests:
+          - not_null
+          - unique
+      - name: owner_address
+        description: "Address that received the position NFT when it was minted."
+        data_tests:
+          - not_null
+      - name: tick_lower
+        description: "Lower tick of the position range."
+        data_tests:
+          - not_null
+      - name: tick_upper
+        description: "Upper tick of the position range."
+        data_tests:
+          - not_null
+      - name: price_lower_usdc
+        description: "Lower range bound as a WETH price in USDC."
+        data_tests:
+          - not_null
+      - name: price_upper_usdc
+        description: "Upper range bound as a WETH price in USDC."
+        data_tests:
+          - not_null
+      - name: range_width_usdc
+        description: "price_upper_usdc minus price_lower_usdc."
+        data_tests:
+          - not_null
+      - name: entry_price_usdc
+        description: "Pool price in USDC per WETH at the first deposit."
+        data_tests:
+          - not_null
+      - name: entry_location
+        description: "Where the pool price sat relative to the range at the first deposit."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['price_below_range', 'price_in_range', 'price_above_range']
+      - name: opened_at
+        description: "Time of the first deposit (NFT mint)."
+        data_tests:
+          - not_null
+      - name: last_activity_at
+        description: "Time of the latest deposit, withdraw or collect."
+        data_tests:
+          - not_null
+      - name: active_seconds
+        description: "Seconds between opened_at and last_activity_at."
+        data_tests:
+          - not_null
+      - name: event_count
+        description: "Number of deposit, withdraw and collect events."
+        data_tests:
+          - not_null
+      - name: deposited_usdc
+        description: "Sum of deposits valued in USDC at the price when each happened."
+        data_tests:
+          - not_null
+      - name: collected_usdc
+        description: "Sum of collects (principal plus fees) valued in USDC at the price when each happened."
+        data_tests:
+          - not_null
+      - name: realized_pnl_usdc
+        description: "collected_usdc minus deposited_usdc."
+        data_tests:
+          - not_null
+      - name: position_status
+        description: "closed when all liquidity was removed and collected after the last withdraw, otherwise open."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['closed', 'open']
+      - name: outcome
+        description: "win, loss or breakeven (within 1 cent) for closed positions; open for open ones."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['win', 'loss', 'breakeven', 'open']

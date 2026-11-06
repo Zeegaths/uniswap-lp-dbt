@@ -1,0 +1,14 @@
+[project]
+name = "uniswap-lp-dbt"
+version = "0.1.0"
+description = "Uniswap V3 liquidity provider PnL on Base, modeled with dbt"
+requires-python = ">=3.10"
+dependencies = [
+    "web3>=7,<8",
+    "psycopg2-binary>=2.9",
+    "python-dotenv>=1.0",
+    "dbt-postgres>=1.9,<2",
+]
+
+[tool.uv]
+package = false

@@ -1,0 +1,29 @@
+name: lp_analytics
+version: "1.0.0"
+config-version: 2
+
+profile: analytics
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  # Uniswap V3 WETH/USDC 0.05% pool on Base and the NFT position manager.
+  # Lowercase, to match how extract.py stores addresses.
+  pool_address: "0xd0b53d9277642d899df5c87a3966a349a798f224"
+  position_manager_address: "0x03a520b32c04bf3beef7beb72e919cf822ed34f1"
+  token0_decimals: 18   # WETH
+  token1_decimals: 6    # USDC
+
+models:
+  lp_analytics:
+    staging:
+      +materialized: view
+    intermediate:
+      +materialized: view
+    marts:
+      +materialized: table

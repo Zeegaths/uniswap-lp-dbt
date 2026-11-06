@@ -1,0 +1,226 @@
+version: 2
+
+models:
+  - name: int_pool_prices
+    description: >
+      Pool price after every swap, converted from sqrtPriceX96 to USDC per WETH.
+    columns:
+      - name: event_order
+        description: "Sortable position on chain: block_number * 1,000,000 + log_index."
+        data_tests:
+          - not_null
+          - unique
+      - name: block_number
+        description: "Block of the swap."
+        data_tests:
+          - not_null
+      - name: log_index
+        description: "Log index of the swap."
+        data_tests:
+          - not_null
+      - name: block_timestamp
+        description: "Time of the swap."
+        data_tests:
+          - not_null
+      - name: tick
+        description: "Pool tick after the swap."
+        data_tests:
+          - not_null
+      - name: price_usdc_per_weth
+        description: "Pool price after the swap in USDC per WETH."
+        data_tests:
+          - not_null
+  - name: int_lp_positions
+    description: >
+      One row per NFT position opened in the pool during the extracted range, with its owner and price range.
+    columns:
+      - name: position_id
+        description: "NFT token id of the position."
+        data_tests:
+          - not_null
+          - unique
+      - name: owner_address
+        description: "Address that received the position NFT when it was minted."
+        data_tests:
+          - not_null
+      - name: tick_lower
+        description: "Lower tick of the range, from the matching pool Mint."
+        data_tests:
+          - not_null
+      - name: tick_upper
+        description: "Upper tick of the range, from the matching pool Mint."
+        data_tests:
+          - not_null
+      - name: price_lower_usdc
+        description: "Lower range bound as a WETH price in USDC."
+        data_tests:
+          - not_null
+      - name: price_upper_usdc
+        description: "Upper range bound as a WETH price in USDC."
+        data_tests:
+          - not_null
+      - name: opened_at
+        description: "Time the position was minted."
+        data_tests:
+          - not_null
+      - name: opened_event_order
+        description: "Sortable chain position of the opening deposit."
+        data_tests:
+          - not_null
+  - name: int_position_events
+    description: >
+      Every deposit, withdraw and collect for positions in int_lp_positions, priced at the pool price right before the event.
+    columns:
+      - name: position_id
+        description: "NFT token id of the position."
+        data_tests:
+          - not_null
+      - name: event_type
+        description: "deposit, withdraw or collect."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['deposit', 'withdraw', 'collect']
+      - name: event_order
+        description: "Sortable chain position: block_number * 1,000,000 + log_index."
+        data_tests:
+          - not_null
+      - name: tx_hash
+        description: "Transaction hash."
+        data_tests:
+          - not_null
+      - name: block_number
+        description: "Block of the event."
+        data_tests:
+          - not_null
+      - name: log_index
+        description: "Log index of the event."
+        data_tests:
+          - not_null
+      - name: block_timestamp
+        description: "Time of the event."
+        data_tests:
+          - not_null
+      - name: liquidity_delta
+        description: "Liquidity change: positive for deposits, negative for withdraws, 0 for collects."
+        data_tests:
+          - not_null
+      - name: amount_weth
+        description: "WETH moved in the event."
+        data_tests:
+          - not_null
+      - name: amount_usdc
+        description: "USDC moved in the event."
+        data_tests:
+          - not_null
+      - name: price_usdc_per_weth
+        description: "Pool price after the most recent earlier swap."
+        data_tests:
+          - not_null
+      - name: pool_tick
+        description: "Pool tick after the most recent earlier swap."
+        data_tests:
+          - not_null
+      - name: value_usdc
+        description: "amount_weth * price_usdc_per_weth + amount_usdc."
+        data_tests:
+          - not_null
+  - name: int_position_pnl
+    description: >
+      One row per position with realized PnL, status, outcome and entry location. All business decisions live here.
+    columns:
+      - name: position_id
+        description: "NFT token id of the position."
+        data_tests:
+          - not_null
+          - unique
+      - name: owner_address
+        description: "Address that received the position NFT when it was minted."
+        data_tests:
+          - not_null
+      - name: tick_lower
+        description: "Lower tick of the position range."
+        data_tests:
+          - not_null
+      - name: tick_upper
+        description: "Upper tick of the position range."
+        data_tests:
+          - not_null
+      - name: price_lower_usdc
+        description: "Lower range bound as a WETH price in USDC."
+        data_tests:
+          - not_null
+      - name: price_upper_usdc
+        description: "Upper range bound as a WETH price in USDC."
+        data_tests:
+          - not_null
+      - name: range_width_usdc
+        description: "price_upper_usdc minus price_lower_usdc."
+        data_tests:
+          - not_null
+      - name: entry_price_usdc
+        description: "Pool price in USDC per WETH at the first deposit."
+        data_tests:
+          - not_null
+      - name: entry_tick
+        description: "Pool tick at the first deposit."
+        data_tests:
+          - not_null
+      - name: entry_location
+        description: "Where the pool price sat relative to the range at the first deposit."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['price_below_range', 'price_in_range', 'price_above_range']
+      - name: opened_at
+        description: "Time of the first deposit (NFT mint)."
+        data_tests:
+          - not_null
+      - name: last_activity_at
+        description: "Time of the latest deposit, withdraw or collect."
+        data_tests:
+          - not_null
+      - name: active_seconds
+        description: "Seconds between opened_at and last_activity_at."
+        data_tests:
+          - not_null
+      - name: event_count
+        description: "Number of deposit, withdraw and collect events."
+        data_tests:
+          - not_null
+      - name: liquidity_added
+        description: "Total liquidity units deposited."
+        data_tests:
+          - not_null
+      - name: liquidity_removed
+        description: "Total liquidity units withdrawn."
+        data_tests:
+          - not_null
+      - name: deposited_usdc
+        description: "Sum of deposits valued in USDC at the price when each happened."
+        data_tests:
+          - not_null
+      - name: collected_usdc
+        description: "Sum of collects (principal plus fees) valued in USDC at the price when each happened."
+        data_tests:
+          - not_null
+      - name: realized_pnl_usdc
+        description: "collected_usdc minus deposited_usdc."
+        data_tests:
+          - not_null
+      - name: position_status
+        description: "closed when all liquidity was removed and collected after the last withdraw, otherwise open."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['closed', 'open']
+      - name: outcome
+        description: "win, loss or breakeven (within 1 cent) for closed positions; open for open ones."
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['win', 'loss', 'breakeven', 'open']
