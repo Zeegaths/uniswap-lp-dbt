@@ -110,6 +110,18 @@ Open http://localhost:8080 and log in with `AIRFLOW_ADMIN_USER` / `AIRFLOW_ADMIN
 
 Files: `orchestration/dags/lp_pipeline.py`, `orchestration/Dockerfile`, `docker-compose.airflow.yml`.
 
+## Future improvements
+
+Ideas for a version 2. None of these need new extraction unless noted.
+
+1. **React to range exits.** The clearest test of active management: for each position, did the price leave its range while it was open, and how long until the LP closed or moved it? Closing within minutes means managed, sitting out of range for hours means passive or neglected. Uses the pool tick already in `int_pool_prices`. Planned as `int_position_range_exits` with `exited_range` and `minutes_to_react` on the mart.
+2. **LP vs holding.** Realized PnL is cash in vs cash out in USDC, so a drop in the ETH price shows up as an LP loss. Comparing each position against simply holding the deposited tokens (impermanent loss) would separate bad LP decisions from market moves.
+3. **Direct pool positions.** Only NFT positions from the Uniswap position manager are counted. Vaults (Gamma, Arrakis) and JIT bots call the pool directly and are left out, and JIT bots are often the most profitable LPs. Add them keyed by contract address plus tick range, and compare them against regular wallets.
+4. **Bot or human.** Check each owner address with `eth_getCode`. A contract is almost certainly a bot or vault. Needs one extra RPC call per owner.
+5. **Mark open positions to market.** Open positions are not valued, so their outcome is unknown. Valuing them at the latest pool price would include patient LPs in the results.
+6. **Longer window.** One day favors short-lived positions. Weeks of data, through the Airflow schedule, would answer whether passive LPs beat rebalancers. Base now produces a block every 0.2 seconds, so a day is about 432,000 blocks. Keeping up needs an hourly schedule or an RPC plan that allows larger `eth_getLogs` ranges.
+7. **Gas costs.** Add each transaction's fee to the PnL. Small on Base, but it would make frequent rebalancing look worse.
+
 ## Limitations
 
 - Only NFT positions through the Uniswap position manager. Liquidity added by other contracts is skipped.
