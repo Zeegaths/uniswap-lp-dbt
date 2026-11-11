@@ -55,6 +55,7 @@ DEFAULT_SNAPSHOT = ROOT / "data" / "raw_events.jsonl.gz"
 START_BLOCK = int(os.getenv("START_BLOCK", "53400000"))
 CONFIRMATIONS = int(os.getenv("CONFIRMATIONS", "20"))
 MAX_BLOCKS_PER_RUN = int(os.getenv("MAX_BLOCKS_PER_RUN", "43200"))
+ANCHOR_BLOCKS = int(os.getenv("ANCHOR_BLOCKS", "1000"))  # real timestamp every N blocks
 
 DB = dict(
     host=os.getenv("DB_HOST", "localhost"),
@@ -267,20 +268,31 @@ def run_live(from_block, to_block, snapshot_path=None, incremental=False):
             decoders[(addr, topic)] = getattr(contract.events, ev["name"])()
     topics = sorted({t for _, t in decoders})
 
-    # Base produces one block every 2 seconds, so timestamps are interpolated
-    # from the range ends instead of one RPC call per block.
-    t_from = with_retry(w3.eth.get_block, from_block)["timestamp"]
-    t_to = with_retry(w3.eth.get_block, to_block)["timestamp"]
-    spb = (t_to - t_from) / max(to_block - from_block, 1)
-    log.info("Blocks %d to %d, %.2f seconds per block", from_block, to_block, spb)
+    # Timestamps: one RPC call per block would double the run time, so real
+    # timestamps are fetched every ANCHOR_BLOCKS blocks and interpolated in
+    # between. Stays accurate even if the chain's block time changes.
+    anchor_ts = {}
+
+    def ts_at(block):
+        if block not in anchor_ts:
+            anchor_ts[block] = with_retry(w3.eth.get_block, block)["timestamp"]
+        return anchor_ts[block]
 
     def block_ts(log_entry):
         raw = log_entry.get("blockTimestamp")
         if raw is not None:
             ts = int(raw, 16) if isinstance(raw, str) else int(raw)
         else:
-            ts = round(t_from + (log_entry["blockNumber"] - from_block) * spb)
+            b = log_entry["blockNumber"]
+            lo = from_block + (b - from_block) // ANCHOR_BLOCKS * ANCHOR_BLOCKS
+            hi = min(lo + ANCHOR_BLOCKS, to_block)
+            t_lo, t_hi = ts_at(lo), ts_at(hi)
+            ts = round(t_lo + (b - lo) * (t_hi - t_lo) / max(hi - lo, 1))
         return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+
+    span = to_block - from_block
+    log.info("Blocks %d to %d, %.2f seconds per block on average",
+             from_block, to_block, (ts_at(to_block) - ts_at(from_block)) / max(span, 1))
 
     conn = connect()
     all_rows = []
