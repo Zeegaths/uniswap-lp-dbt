@@ -18,6 +18,7 @@ x-airflow-common: &airflow-common
     AIRFLOW__CORE__LOAD_EXAMPLES: "false"
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: "http://airflow-apiserver:8080/execution/"
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: "true"
+    AIRFLOW__API_AUTH__JWT_SECRET: ${AIRFLOW_JWT_SECRET}
     # Pipeline DB inside the compose network. User, password, db name and RPC_URL come from .env.
     DB_HOST: postgres
     DB_PORT: "5432"
@@ -123,7 +124,7 @@ services:
         mkdir -p /opt/airflow/{logs,dags,plugins,config}
         /entrypoint airflow version
         /entrypoint airflow config list >/dev/null
-        chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/{logs,dags,plugins,config}
+        chown -R "${AIRFLOW_UID:-50000}:0" /opt/airflow/{logs,dags,plugins,config} || true
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_MIGRATE: "true"
